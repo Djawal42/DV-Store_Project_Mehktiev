@@ -1,0 +1,129 @@
+<main class="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Breadcrumb -->
+    <div class="mb-8">
+        <nav class="text-sm text-gray-600">
+            <a href="{% url 'main:index' %}" 
+               hx-get="{% url 'main:index' %}" 
+               hx-target="#main-content" 
+               hx-push-url="true"
+               class="hover:text-gray-900">НА ГЛАВНУЮ</a>
+            <span class="mx-2">/</span>
+            <a href="{% url 'main:catalog' product.category.slug %}" 
+               hx-get="{% url 'main:catalog' product.category.slug %}" 
+               hx-target="#main-content" 
+               hx-push-url="true"
+               class="hover:text-gray-900">{{ product.category.name|upper }}</a>
+            <span class="mx-2">/</span>
+            <span class="text-gray-900">{{ product.name|upper }}</span>
+        </nav>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        <!-- Product Images -->
+        <div class="space-y-4">
+            <!-- Main Image -->
+            <div class="aspect-square overflow-hidden bg-gray-100">
+                {% if product.main_image %}
+                    <img src="{{ product.main_image.url }}" 
+                         alt="{{ product.name }}" 
+                         class="w-full h-full object-cover">
+                {% else %}
+                    <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                        <span class="text-gray-400">БЕЗ ИЗОБРАЖЕНИЯ</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Additional Images -->
+            {% if product.images.all %}
+            <div class="grid grid-cols-3 gap-2">
+                {% for image in product.images.all %}
+                <div class="aspect-square overflow-hidden bg-gray-100 cursor-pointer hover:opacity-80">
+                    <img src="{{ image.image.url }}" 
+                         alt="{{ product.name }}" 
+                         class="w-full h-full object-cover"
+                         onclick="changeMainImage(this.src)">
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Product Info -->
+        <div class="space-y-6">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 mb-2">
+                    {{ product.brand.name|upper }} {{ product.name|upper }}
+                </h1>
+                <p class="text-lg text-gray-600 mb-4">{{ product.color|upper }}</p>
+                <p class="text-sm text-gray-600">
+                    Память: {{ product.storage }} | ОЗУ: {{ product.ram }}
+                </p>
+
+                <p class="text-sm text-gray-600">
+                    Состояние: {{ product.get_condition_display }}
+                </p>
+
+                {% if product.battery_health %}
+                <p class="text-sm text-gray-600">
+                    Здоровье аккумулятора: {{ product.battery_health }}%
+                </p>
+                {% endif %}
+                <p class="text-2xl font-bold text-gray-900">{{ product.price }} ₽ </p>
+            </div>
+
+            <!-- Add to Cart -->
+            <div class="space-y-4">
+                <button id="add-to-cart-btn" 
+                        class="w-full bg-black text-white py-3 px-6 text-sm font-medium hover:bg-[#c6a85c] transition-colors"
+                        onclick="addToCart()"
+                    В КОРЗИНУ
+                </button>
+                
+                <button class="w-full border border-gray-300 py-3 px-6 text-sm font-medium hover:border-gray-900 transition-colors">
+                    В ИЗБРАННОЕ
+                </button>
+            </div>
+
+            <!-- Product Details -->
+            <div class="border-t border-gray-200 pt-6">
+                <h3 class="text-sm font-medium text-gray-900 mb-3">ОПИСАНИЕ</h3>
+                <div class="prose prose-sm text-gray-600">
+                    <p>{{ product.description|linebreaks }}</p>
+                    <p>Создано: {{ product.created_at|date:"F d, Y" }}</p>
+                </div>
+            </div>
+
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <div class="mt-16 border-t border-gray-200 pt-16">
+        <h2 class="text-xl font-bold tracking-tight text-gray-900 mb-8">ПОХОЖИЕ ТОВАРЫ</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {% for related_product in related_products %}
+            <div class="product-card group cursor-pointer" 
+                 hx-get="{% url 'main:product_detail' related_product.slug %}"
+                 hx-target="#main-content"
+                 hx-push-url="true">
+                <div class="aspect-square overflow-hidden bg-gray-100 mb-4">
+                    {% if related_product.main_image %}
+                        <img src="{{ related_product.main_image.url }}" 
+                             alt="{{ related_product.name }}" 
+                             class="product-image w-full h-full object-cover">
+                    {% else %}
+                        <div class="product-image w-full h-full bg-gray-200 flex items-center justify-center">
+                            <span class="text-gray-400 text-sm">НЕТ ИЗОБРАЖЕНИЯ</span>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="text-center">
+                    <h3 class="text-sm font-medium text-gray-900 mb-1">{{ related_product.name|upper }}</h3>
+                    <p class="text-sm text-gray-600 mb-1">{{ related_product.color|upper }}</p>
+                    <p class="text-sm font-medium">${{ related_product.price }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</main>

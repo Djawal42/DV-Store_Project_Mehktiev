@@ -1,0 +1,29 @@
+<!-- Пустой блок для замены удалённого товара -->
+<div style="display: none;" data-removed-item="{{ item_id }}"></div>
+
+<script>
+    // Обновление данных корзины
+    htmx.ajax('GET', '{% url "cart:cart_count" %}', {
+        target: '#cart-count',
+        swap: 'none',
+        onLoad: function(response) {
+            const data = JSON.parse(response);
+            document.getElementById('cart-count').textContent = data.total_items;
+            updateHeaderCartCount(data.total_items);
+            
+            // Обновляем итоговую сумму
+            const subtotalElement = document.querySelector('#cart-summary .font-bold:last-child');
+            if (subtotalElement) {
+                subtotalElement.textContent = data.subtotal.toFixed(2) + ' ₽';
+            }
+            
+            // Если корзина пустая — перезагружаем модальное окно
+            if (data.total_items === 0) {
+                htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
+                    target: '#cart-modal',
+                    swap: 'outerHTML'
+                });
+            }
+        }
+    });
+</script>
