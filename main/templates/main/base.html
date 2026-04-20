@@ -48,7 +48,7 @@
             background-color: black;
         }
 
-        <!-- Основные Стили -->
+
         .gold-text {
             color: #c6a85c;
         }
@@ -56,6 +56,7 @@
         .nav-link:hover::after,
         .nav-link.active::after {
             background-color: #c6a85c;
+        }
 
         /* Mobile menu styles */
         .mobile-menu {
@@ -115,7 +116,7 @@
         .htmx-request.htmx-indicator {
             opacity: 1;
         }
-}
+
     </style>
 </head>
 <body class="bg-white">
@@ -302,7 +303,7 @@
             updateCartCount();
             
             function updateHeaderCartCount(count) {
-                const cartText = `CART (${count})`;
+                const cartText = `КОРЗИНА (${count})`;
                 if (desktopCart) desktopCart.textContent = cartText;
                 if (mobileCart) mobileCart.textContent = cartText;
                 if (mobileCartHeader) mobileCartHeader.textContent = cartText;
@@ -365,7 +366,7 @@
             const desktopCart = document.getElementById('desktopCart');
             const mobileCart = document.getElementById('mobileCart');
             const mobileCartHeader = document.getElementById('mobileCartHeader');
-            const cartText = `CART (${count})`;
+            const cartText = `КОРЗИНА (${count})`;
             
             if (desktopCart) desktopCart.textContent = cartText;
             if (mobileCart) mobileCart.textContent = cartText;

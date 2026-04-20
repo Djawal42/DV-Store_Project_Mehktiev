@@ -1,6 +1,7 @@
-<button hx-get="?show_search=true"
-        hx-target="#search-wrapper, #mobile-search-wrapper"
-        hx-swap="innerHTML"
-        class="border px-4 py-2 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition">
+<button
+    hx-get="{% url 'main:catalog_all' %}?show_search=true"
+    hx-target="#search-wrapper, #mobile-search-wrapper"
+    hx-swap="innerHTML"
+    class="border px-4 py-2 hover:bg-black hover:text-white transition">
     Поиск
 </button>

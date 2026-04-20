@@ -1,6 +1,10 @@
 from django.contrib import admin
 from .models import Category, Brand, Product, ProductImage
 
+admin.site.site_header = "D&V STORE"
+admin.site.site_title = "D&V STORE Администрирование"
+admin.site.index_title = "Панель управления"
+
 
 # Встроенные дополнительные изображения
 class ProductImageInline(admin.TabularInline):

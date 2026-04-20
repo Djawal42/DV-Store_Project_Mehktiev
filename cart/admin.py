@@ -20,7 +20,7 @@ class CartAdmin(admin.ModelAdmin):
 
 @admin.register(CartItem)
 class CartItemAdmin(admin.ModelAdmin):
-    list_display = ('cart', 'product', 'product_size',
+    list_display = ('cart', 'product',
                     'quantity', 'total_price', 'added_at')
     list_filter = ('added_at',)
     search_fields = ('product__name', 'cart__session_key')
