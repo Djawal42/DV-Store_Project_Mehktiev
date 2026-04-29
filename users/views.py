@@ -1,26 +1,68 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate, logout
+from django.contrib import messages
+from django.contrib.auth import login, authenticate
+from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.http import HttpResponse
 from django.template.response import TemplateResponse
-from .forms import CustomUserCreationForm, CustomUserLoginForm, \
-    CustomUserUpdateForm
+from .forms import CustomUserCreationForm, CustomUserLoginForm, CustomUserUpdateForm
 from .models import CustomUser
-from django.contrib import messages
-from main.models import Product
+from main.models import Product, Category
+from django.views.generic import TemplateView, DetailView
+from orders.models import Order
+
+class OrderHistoryView(LoginRequiredMixin, TemplateView):
+    template_name = 'users/partials/order_history.html'
+    login_url = '/users/login/'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['orders'] = Order.objects.filter(user=self.request.user).order_by('-created_at')
+        return context
+
+    def get(self, request, *args, **kwargs):
+        if not request.headers.get('HX-Request'):
+            return redirect('users:profile')
+        context = self.get_context_data(**kwargs)
+        return TemplateResponse(request, self.template_name, context)
 
 
+class OrderDetailView(LoginRequiredMixin, DetailView):
+    model = Order
+    template_name = 'users/partials/order_detail.html'
+    pk_url_kwarg = 'order_id'
+    login_url = '/users/login/'
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user)
+
+    def get(self, request, *args, **kwargs):
+        if not request.headers.get('HX-Request'):
+            return redirect('users:profile')
+        self.object = self.get_object()
+        context = self.get_context_data(**kwargs)
+        return TemplateResponse(request, self.template_name, context)
+        
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            login(request, user)
             return redirect('main:index')
     else:
         form = CustomUserCreationForm()
-    return render(request, 'users/register.html', {'form': form})
+
+    context = {'form': form}
+
+    # Если HTMX — возвращаем только контент
+    if request.headers.get('HX-Request'):
+        return TemplateResponse(request, 'users/register_content.html', context)
+
+    # Если обычный запрос — полный layout
+    return render(request, 'users/register.html', context)
 
 
 def login_view(request):
@@ -28,10 +70,14 @@ def login_view(request):
         form = CustomUserLoginForm(request=request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            login(request, user)
             return redirect('main:index')
     else:
         form = CustomUserLoginForm()
+
+    if request.headers.get('HX-Request'):
+        return TemplateResponse(request, 'users/login_content.html', {'form': form})
+
     return render(request, 'users/login.html', {'form': form})
     
 
@@ -48,12 +94,21 @@ def profile_view(request):
         form = CustomUserUpdateForm(instance=request.user)
 
     recommended_products = Product.objects.all().order_by('id')[:3]
+    latest_order = Order.objects.filter(user=request.user).order_by('-created_at').first()
 
-    return TemplateResponse(request, 'users/profile.html', {
+    context = {
         'form': form,
         'user': request.user,
-        'recommended_products': recommended_products
-    })
+        'recommended_products': recommended_products,
+        'latest_order': latest_order,
+        'categories': Category.objects.all(),
+    }
+
+    # Проверяем HTMX
+    if request.headers.get('HX-Request'):
+        return TemplateResponse(request, 'users/profile_content.html', context)
+
+    return TemplateResponse(request, 'users/profile.html', context)
 
 
 @login_required(login_url='/users/login')
@@ -90,8 +145,14 @@ def update_account_details(request):
 
 
 def logout_view(request):
-    logout(request)
-    if request.headers.get('HX-Request'):
-        return HttpResponse(headers={'HX-Redirect': reverse('main:index')})
-    return redirect('main:index')
+    if request.method == 'POST' or request.headers.get('HX-Request'):
+        auth_logout(request)
+        response = HttpResponse(status=200)
+        response['HX-Redirect'] = reverse('users:login')
+        # Очищаем сессию полностью
+        request.session.flush()
+        return response
 
+    auth_logout(request)
+    request.session.flush()
+    return redirect('main:index')

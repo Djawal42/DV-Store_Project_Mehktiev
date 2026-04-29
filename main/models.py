@@ -6,7 +6,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Создаю категории для группировки товаров
 class Category(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, verbose_name="Название")
     slug = models.CharField(max_length=100, unique=True, blank=True)
 
 
@@ -24,7 +24,7 @@ class Category(models.Model):
 
 
 class Brand(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, verbose_name="Название")
     slug = models.SlugField(max_length=100, unique=True, blank=True)
 
     def save(self, *args, **kwargs):
@@ -90,7 +90,7 @@ class Product(models.Model):
     battery_health = models.PositiveIntegerField(
         null=True,
         blank=True,
-        help_text="Укажите состояние аккумулятора...",
+        help_text="Укажите состояние аккумулятора",
         verbose_name="Здоровье аккумулятора",
         validators=[
         MinValueValidator(0),

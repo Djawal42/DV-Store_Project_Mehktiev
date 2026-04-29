@@ -1,0 +1,216 @@
+{% load static %}
+
+<main class="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="grid lg:grid-cols-2 gap-12">
+            <!-- Левая колонка – Форма -->
+            <div class="space-y-8">
+                <!-- Хлебные крошки -->
+                <div class="text-center lg:text-left">
+                    <nav class="flex items-center space-x-2 text-sm text-gray-600">
+                        <a href="{% url 'main:index' %}" 
+                           hx-get="{% url 'main:index' %}" 
+                           hx-target="#main-content" 
+                           hx-push-url="true"
+                           class="hover:text-gray-900">ГЛАВНАЯ</a>
+                        <span class="mx-2">/</span>
+                        <span class="font-medium">ОФОРМЛЕНИЕ ЗАКАЗА</span>
+                    </nav>
+                </div>
+
+                <!-- Контактная информация -->
+                <div class="bg-white p-6">
+                    <h2 class="text-lg font-bold text-black mb-4">Контактная информация</h2>
+                    
+                    <form method="post" id="order-form" 
+                          hx-post="{% url 'orders:checkout' %}" 
+                          hx-target="#main-content" 
+                          hx-swap="outerHTML">
+                        {% csrf_token %}
+                        <div class="bg-white p-6">
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-black mb-1">Email</label>
+                                    {{ form.email }}
+                                    {% if form.email.errors %}
+                                        <div class="text-red-500 text-sm mt-1">{{ form.email.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <!-- Адрес доставки -->
+                        <div class="bg-white p-6">
+                            <h2 class="text-lg font-bold text-black mb-4">Адрес доставки</h2>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="{{ form.country.id_for_label }}" class="block text-sm font-medium text-black mb-1">Страна</label>
+                                    {{ form.country }}
+                                    {% if form.country.errors %}
+                                        <div class="text-red-500 text-sm mt-1">{{ form.country.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-black mb-1">Имя</label>
+                                        {{ form.first_name }}
+                                        {% if form.first_name.errors %}
+                                            <div class="text-red-500 text-sm mt-1">{{ form.first_name.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-black mb-1">Фамилия</label>
+                                        {{ form.last_name }}
+                                        {% if form.last_name.errors %}
+                                            <div class="text-red-500 text-sm mt-1">{{ form.last_name.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-black mb-1">Адрес</label>
+                                    {{ form.address }}
+                                    {% if form.address.errors %}
+                                        <div class="text-red-500 text-sm mt-1">{{ form.address.errors }}</div>
+                                    {% endif %}
+                                    <div class="absolute right-3 top-10 transform -translate-y-1/2">
+                                        <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <label for="{{ form.city.id_for_label }}" class="block text-sm font-medium text-black mb-1">Город</label>
+                                        {{ form.city }}
+                                        {% if form.city.errors %}
+                                            <div class="text-red-500 text-sm mt-1">{{ form.city.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <label for="{{ form.province.id_for_label }}" class="block text-sm font-medium text-black mb-1">Регион</label>
+                                        {{ form.province }}
+                                        {% if form.province.errors %}
+                                            <div class="text-red-500 text-sm mt-1">{{ form.province.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <label for="{{ form.postal_code.id_for_label }}" class="block text-sm font-medium text-black mb-1">Почтовый индекс</label>
+                                        {{ form.postal_code }}
+                                        {% if form.postal_code.errors %}
+                                            <div class="text-red-500 text-sm mt-1">{{ form.postal_code.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <label for="{{ form.phone.id_for_label }}" class="block text-sm font-medium text-black mb-1">Телефон</label>
+                                    {{ form.phone }}
+                                    {% if form.phone.errors %}
+                                        <div class="text-red-500 text-sm mt-1">{{ form.phone.errors }}</div>
+                                    {% endif %}
+                                    <div class="absolute right-3 top-10 transform -translate-y-1/2">
+                                        <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <!-- Кнопка оформления заказа -->
+                        <div class="mt-6">
+                            <button type="submit" 
+                                    form="order-form"
+                                    name="create_order" 
+                                    value="create_order" 
+                                    class="w-full bg-black text-white py-4 px-6 font-bold hover:bg-[#c6a85c] transition-colors">
+                                ПЕРЕЙТИ К ОПЛАТЕ
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Политика возврата -->
+                    <div class="text-center mt-4">
+                        <a href="{% url 'main:return_policy' %}" class="text-sm text-gray-600 underline hover:text-gray-800">
+                            Политика возврата
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Правая колонка – Состав заказа -->
+            <div class="bg-white p-6 rounded-lg shadow-sm h-fit">
+                <!-- Товары -->
+                <div class="space-y-4 mb-6">
+                    {% for item in cart_items %}
+                        <div class="flex items-center space-x-4">
+                            <div class="relative">
+                                {% if item.product.main_image %}
+                                    <img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}" class="w-16 h-16 object-cover rounded bg-gray-100">
+                                {% else %}
+                                    <img src="{% static 'img/placeholder.jpg' %}" alt="{{ item.product.name }}" class="w-16 h-16 object-cover rounded bg-gray-100">
+                                {% endif %}
+                                <span class="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{{ item.quantity }}</span>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-medium text-sm">{{ item.product.brand.name }} {{ item.product.name }}</h3>
+                                {% if item.product.ram and item.product.rom %}
+                                    <p class="text-xs text-gray-600">{{ item.product.ram }}/{{ item.product.rom }} ГБ, {{ item.product.color|default:"" }}</p>
+                                {% elif item.product.color %}
+                                    <p class="text-xs text-gray-600">{{ item.product.color }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="text-right">
+                                <span class="font-medium">{{ item.product.price }} ₽</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Итоги -->
+                <div id="order-summary" class="space-y-3 border-t pt-4">
+                    <div class="flex justify-between text-sm">
+                        <span>Товары ({{ cart.total_items }} шт.)</span>
+                        <span>{{ cart.subtotal|floatformat:2 }} ₽</span>
+                    </div>
+                    
+                    <div class="flex justify-between text-sm">
+                        <span>Доставка</span>
+                        <span class="text-gray-600">Бесплатно</span>
+                    </div>
+                    
+                    <div class="flex justify-between text-lg font-medium pt-3 border-t">
+                        <span>Итого</span>
+                        <div class="text-right">
+                            <span>{{ cart.subtotal|floatformat:2 }} ₽</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('order-form');
+        if (!form) return;
+
+        form.addEventListener('submit', function(e) {
+            const requiredFields = ['email', 'first_name', 'last_name', 'address', 'city', 'country'];
+            let isValid = true;
+
+            requiredFields.forEach(fieldName => {
+                const field = form.querySelector(`[name="${fieldName}"]`);
+                if (field && !field.value.trim()) {
+                    console.error('Не заполнено поле:', fieldName);
+                    isValid = false;
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+                alert('Пожалуйста, заполните все обязательные поля');
+            }
+        });
+    });
+</script>

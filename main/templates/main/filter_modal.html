@@ -1,15 +1,61 @@
-        
+<div class="p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold tracking-tight text-gray-900 uppercase">Фильтры</h2>
+        <button class="text-gray-600 hover:text-gray-900"
+                onclick="document.getElementById('filter-modal').classList.add('hidden')">
+            ×
+        </button>
+    </div>
+
+    <form hx-get="{% if current_category %}{% url 'main:catalog' current_category.slug %}{% else %}{% url 'main:catalog_all' %}{% endif %}" 
+          hx-target="#main-content" 
+          hx-push-url="true">
+        <input type="hidden" name="q" value="{{ filter_params.q|default:'' }}">
+    
         <div class="space-y-6">
-            <!-- Color -->
+            <!-- ЦВЕТ -->
             <div>
                 <h3 class="text-sm font-medium text-gray-900 mb-3">ЦВЕТ</h3>
-                <input type="text" 
-                       name="color" 
-                       value="{{ filter_params.color|default:'' }}" 
-                       class="w-full border border-gray-300 py-2 px-3 text-sm uppercase focus:outline-none focus:border-gray-900">
+                <select name="color" 
+                        class="w-full border border-gray-300 py-2 px-3 text-sm uppercase focus:outline-none focus:border-gray-900 bg-white">
+                    <option value="">ЛЮБОЙ</option>
+                    {% for color in available_colors %}
+                        <option value="{{ color }}" {% if filter_params.color == color %}selected{% endif %}>
+                            {{ color }}
+                        </option>
+                    {% endfor %}
+                </select>
             </div>
 
-            <!-- Price Range -->
+            <!-- БРЕНД -->
+            <div>
+                <h3 class="text-sm font-medium text-gray-900 mb-3">БРЕНД</h3>
+                <select name="brand" 
+                        class="w-full border border-gray-300 py-2 px-3 text-sm uppercase focus:outline-none focus:border-gray-900 bg-white">
+                    <option value="">ЛЮБОЙ</option>
+                    {% for brand in available_brands %}
+                        <option value="{{ brand.slug }}" {% if filter_params.brand == brand.slug %}selected{% endif %}>
+                            {{ brand.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- СОСТОЯНИЕ -->
+            <div>
+                <h3 class="text-sm font-medium text-gray-900 mb-3">СОСТОЯНИЕ</h3>
+                <select name="condition" 
+                        class="w-full border border-gray-300 py-2 px-3 text-sm uppercase focus:outline-none focus:border-gray-900 bg-white">
+                    <option value="">Все</option>
+                    <option value="new" {% if filter_params.condition == 'new' %}selected{% endif %}>Новый</option>
+                    <option value="excellent" {% if filter_params.condition == 'excellent' %}selected{% endif %}>Отличное</option>
+                    <option value="good" {% if filter_params.condition == 'good' %}selected{% endif %}>Хорошее</option>
+                    <option value="fair" {% if filter_params.condition == 'fair' %}selected{% endif %}>Удовлетворительное</option>
+                    <option value="poor" {% if filter_params.condition == 'poor' %}selected{% endif %}>Сильно изношено</option>
+                </select>
+            </div>
+
+           <!-- ЦЕНА -->        
             <div>
                 <h3 class="text-sm font-medium text-gray-900 mb-3">ЦЕНА</h3>
                 <div class="grid grid-cols-2 gap-4">
@@ -26,8 +72,6 @@
                 </div>
             </div>
 
-
-            <!-- Form Actions -->
             <div class="flex justify-between">
                 <button type="button" 
                         class="border border-gray-300 py-2 px-4 text-sm font-medium uppercase hover:border-gray-900 transition-colors"
@@ -35,7 +79,7 @@
                     Отмена
                 </button>
                 <button type="submit" 
-                        class="bg-black text-white py-2 px-4 text-sm font-medium uppercase hover:bg-gray-800 transition-colors">
+                        class="bg-black text-white py-2 px-4 text-sm font-medium uppercase hover:bg-[#c6a85c] transition-colors">
                     Применить
                 </button>
             </div>

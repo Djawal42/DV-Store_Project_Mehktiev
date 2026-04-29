@@ -47,8 +47,7 @@ INSTALLED_APPS = [
     'main',
     'cart',
     'users',
-    # 'orders',
-    # 'payment',
+    'orders',
 ]
 
 MIDDLEWARE = [
@@ -147,13 +146,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# SESSION_COOKIE_AGE = 86400 # 30 дней
-# SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_AGE = 86400 # 30 дней
+SESSION_SAVE_EVERY_REQUEST = True
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
-# STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
-# STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
+YOOKASSA_SHOP_ID = os.getenv('YOOKASSA_SHOP_ID')
+YOOKASSA_SECRET_KEY = os.getenv('YOOKASSA_SECRET_KEY')
 
-# HELEKET_API_KEY = os.getenv('HELEKET_API_KEY')
-# HELEKET_SECRET_KEY = os.getenv('HELEKET_SECRET_KEY')
+CSRF_COOKIE_HTTPONLY = False  # чтобы JS мог читать куки
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000']

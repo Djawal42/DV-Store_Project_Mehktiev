@@ -50,16 +50,9 @@
     </div>
     
     <div>
-        {{ form.address1 }}
-        {% if form.address1.errors %}
-            <div class="text-red-500 text-xs mt-1">{{ form.address1.errors }}</div>
-        {% endif %}
-    </div>
-    
-    <div>
-        {{ form.address2 }}
-        {% if form.address2.errors %}
-            <div class="text-red-500 text-xs mt-1">{{ form.address2.errors }}</div>
+        {{ form.address }}
+        {% if form.address.errors %}
+            <div class="text-red-500 text-xs mt-1">{{ form.address.errors }}</div>
         {% endif %}
     </div>
     

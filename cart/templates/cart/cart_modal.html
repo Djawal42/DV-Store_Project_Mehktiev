@@ -1,9 +1,9 @@
-<div id="cart-modal" class="fixed right-0 top-0 h-screen w-full max-w-md bg-white dark:bg-black text-black dark:text-white shadow-2xl z-50 transition-transform duration-300">
+<div id="cart-modal" class="cart-modal">
     <div class="h-full flex flex-col">
         <!-- Шапка корзины -->
-        <div class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-800">
+        <div class="flex justify-between items-center p-6 border-b">
             <h1 class="text-2xl font-bold">КОРЗИНА (<span id="cart-count">{{ cart.total_items }}</span>)</h1>
-            <button onclick="closeCart()" class="text-2xl hover:text-gray-600">×</button>
+            <button onclick="closeCart()" class="text-2xl hover:text-gray-600">&times;</button>
         </div>
 
         <!-- Товары в корзине -->
@@ -14,14 +14,14 @@
                 {% empty %}
                     <div class="text-center py-20 text-gray-500">
                         <p class="text-lg mb-4">Ваша корзина пуста</p>
-                        <button onclick="closeCart()" class="text-sm underline">Продолжить покупки</button>
+                        <button onclick="closeCart()" class="text-sm underline hover:text-gray-700">Продолжить покупки</button>
                     </div>
                 {% endfor %}
             </div>
         </div>
 
         <!-- Нижняя часть корзины -->
-        <div id="cart-summary" class="border-t border-gray-200 dark:border-gray-800 p-6">
+        <div id="cart-summary" class="border-t p-6">
             {% if cart_items %}
                 {% include 'cart/cart_summary.html' %}
             {% else %}
@@ -33,74 +33,84 @@
     </div>
 </div>
 
-<!-- Затемнение фона при открытии корзины -->
-<div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 transition-all duration-300"></div>
+<!-- Оверлей -->
+<div id="cart-overlay" class="cart-overlay"></div>
 
 <style>
-    #cart-overlay {
+    /* Оверлей */
+    .cart-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        z-index: 40;
         opacity: 0;
         visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
     }
-    #cart-overlay.open {
+    .cart-overlay.open {
         opacity: 1;
         visibility: visible;
     }
-    #cart-overlay.closed {
-        opacity: 0;
-        visibility: hidden;
+
+    /* Модальное окно корзины */
+    .cart-modal {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        width: 100%;
+        max-width: 28rem;
+        background: white;
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+        z-index: 50;
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+    }
+    .cart-modal.open {
+        transform: translateX(0);
     }
 </style>
 
 <script>
-    function openCart() {
-        const modal = document.getElementById('cart-modal');
-        const overlay = document.getElementById('cart-overlay');
+    (function() {
+        const modal = document.querySelector('.cart-modal');
+        const overlay = document.querySelector('.cart-overlay');
+        
+        // Сразу показываем корзину (она только что загрузилась)
         if (modal && overlay) {
-            modal.classList.remove('closed');
+            // Форсируем reflow
+            modal.offsetHeight;
             modal.classList.add('open');
-            overlay.classList.remove('closed');
             overlay.classList.add('open');
-            console.log('Окно корзины открыто');
-        } else {
-            console.error('Модальное окно корзины или затемнение не найдены');
         }
-    }
+    })();
 
     function closeCart() {
-        const modal = document.getElementById('cart-modal');
-        const overlay = document.getElementById('cart-overlay');
-        if (modal && overlay) {
-            modal.classList.remove('open');
-            modal.classList.add('closed');
-            overlay.classList.remove('open');
-            overlay.classList.add('closed');
-            console.log('Окно корзины закрыто');
-            setTimeout(() => {
-                const container = document.getElementById('cart-container');
-                if (container) {
-                    container.innerHTML = '';
-                }
-            }, 300);
-        } else {
-            console.error('Модальное окно корзины или затемнение не найдены');
-        }
+        const modal = document.querySelector('.cart-modal');
+        const overlay = document.querySelector('.cart-overlay');
+        
+        if (modal) modal.classList.remove('open');
+        if (overlay) overlay.classList.remove('open');
+        
+        setTimeout(() => {
+            const container = document.getElementById('cart-container');
+            if (container) container.innerHTML = '';
+        }, 300);
     }
 
-    // Открытие корзины после подгрузки через HTMX
-    document.addEventListener('htmx:afterSwap', function(evt) {
-        console.log('Событие HTMX afterSwap', evt.detail.elt.id);
-        if (evt.detail.elt.id === 'cart-modal') {
-            console.log('Корзина загружена, запускаем анимацию открытия');
-            openCart();
+    // Закрытие по клику вне модалки
+    document.addEventListener('click', function(e) {
+        const modal = document.querySelector('.cart-modal');
+        if (modal && modal.classList.contains('open') && !modal.contains(e.target)) {
+            closeCart();
         }
     });
 
-    // Резервное открытие корзины при загрузке страницы
-    document.addEventListener('DOMContentLoaded', function() {
-        const modal = document.getElementById('cart-modal');
-        if (modal) {
-            console.log('Корзина найдена при загрузке страницы, запускаем анимацию');
-            openCart();
-        }
+    // Закрытие по Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeCart();
     });
 </script>

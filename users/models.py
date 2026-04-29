@@ -28,8 +28,7 @@ class CustomUser(AbstractUser):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     company = models.CharField(max_length=100, blank=True, null=True)
-    address1 = models.CharField(max_length=255, blank=True, null=True)
-    address2 = models.CharField(max_length=255, blank=True, null=True)
+    address = models.CharField(max_length=255, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
     country = models.CharField(max_length=100, blank=True, null=True)
     province = models.CharField(max_length=100, blank=True, null=True)
@@ -47,8 +46,8 @@ class CustomUser(AbstractUser):
     
 
     def clean(self):
-        for field in ['company', 'address1', 'address2', 'city',
-                      'country', 'province', 'postal_code', 'phone']:
+        for field in ['company', 'address', 'city', 'country',
+                      'province', 'postal_code', 'phone']:
             value = getattr(self, field)
             if value:
                 setattr(self, field, strip_tags(value))

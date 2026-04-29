@@ -76,13 +76,24 @@ class CatalogView(TemplateView):
 
         filter_params['q'] = query or ''
 
+        available_colors = Product.objects.values_list(
+            'color', flat=True
+        ).distinct().order_by('color')
+
+        available_brands = Brand.objects.filter(
+            products__isnull=False
+        ).distinct().order_by('name')
+
         context.update({
             'categories': categories,
             'brands': brands,
             'products': products,
-            'current_category': current_category.slug if current_category else None,
+            'current_category': current_category,
+            'current_category_slug': current_category.slug if current_category else None,
             'filter_params': filter_params,
             'search_query': query or '',
+            'available_colors': available_colors,
+            'available_brands': available_brands,
         })
 
         # Отделяем поиск от каталога
@@ -103,33 +114,33 @@ class CatalogView(TemplateView):
                 return TemplateResponse(request, 'main/search_button.html', {})
             template = 'main/filter_modal.html' if request.GET.get('show_filters') == 'true' else 'main/catalog.html'
             return TemplateResponse(request, template, context)
-        return TemplateResponse(request, self.template, context)
+        return TemplateResponse(request, self.template_name, context)
     
+class ReturnPolicyView(TemplateView):
+    template_name = 'orders/return_policy.html'
 
 # Детальная страница товара
 class ProductDetailView(DetailView):
     model = Product
-    template_name = 'main/base.html'
+    template_name = 'main/product_detail.html'
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        product = self.get.object()
-        context['categories'] = Category.objects.all()
-
-        # Похожие товары по категории
-        context['related_products'] = Product.objects.filter(
-            category=product.category
-        ).exclude(id=product.id).order_by('-created_at')[:4]
-        context['current_category'] = product.category.slug
-        return context
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         context = self.get_context_data(**kwargs)
 
+        # Если HTMX — возвращаем только content
         if request.headers.get('HX-Request'):
-            return TemplateResponse(request, 'main/product_detail.html', context)
+            return TemplateResponse(
+                request,
+                'main/product_detail_content.html',
+                context
+            )
 
-        return TemplateResponse(request, self.template_name, context)
+        # Если обычный переход — возвращаем полный layout
+        return TemplateResponse(
+            request,
+            self.template_name,
+            context
+        )

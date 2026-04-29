@@ -2,11 +2,37 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+    {% csrf_token %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}D&V STORE{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Tailwind refresh после HTMX-запросов
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.addEventListener('htmx:afterSettle', function() {
+                if (window.tailwind && typeof tailwind.scan === 'function') {
+                    tailwind.scan();
+                }
+            });
+        });
+    </script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.addEventListener('htmx:configRequest', function(evt) {
+                const token = getCookie('csrftoken');
+                if (token) {
+                    evt.detail.headers['X-CSRFToken'] = token;
+                }
+            });
+        });
+
+        function getCookie(name) {
+            const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : null;
+        }
+    </script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -48,7 +74,6 @@
             background-color: black;
         }
 
-
         .gold-text {
             color: #c6a85c;
         }
@@ -58,7 +83,6 @@
             background-color: #c6a85c;
         }
 
-        /* Mobile menu styles */
         .mobile-menu {
             transform: translateX(-100%);
             transition: transform 0.3s ease-in-out;
@@ -93,7 +117,6 @@
             transform: rotate(45deg) translate(-5px, -6px);
         }
 
-        /* Overlay */
         .overlay {
             opacity: 0;
             visibility: hidden;
@@ -105,7 +128,6 @@
             visibility: visible;
         }
 
-        /* HTMX loading indicator */
         .htmx-indicator {
             opacity: 0;
             transition: opacity 200ms ease-in;
@@ -116,7 +138,6 @@
         .htmx-request.htmx-indicator {
             opacity: 1;
         }
-
     </style>
 </head>
 <body class="bg-white">
@@ -150,30 +171,41 @@
                    hx-get="{% url 'main:catalog' category.slug %}" 
                    hx-target="#main-content" 
                    hx-push-url="true"
-                   class="mobile-nav-link block text-lg font-medium text-gray-900 hover:text-gray-700 py-2 border-b border-gray-200 {% if current_category == category.slug %}active{% endif %}">
+                   class="mobile-nav-link block text-lg font-medium text-gray-900 hover:text-gray-700 py-2 border-b border-gray-200 {% if current_category and current_category.slug == category.slug %}active{% endif %}">
                    {{ category.name|upper }}
                 </a>
                 {% endfor %}
             </nav>
             
             <div class="mt-8 space-y-4">
-                <a href="#" class="block text-sm font-medium text-gray-900 hover:text-gray-700 py-2">ПОИСК</a>
-                <a href="{% url 'users:profile' %}" 
-                hx-get="{% url 'users:profile' %}" 
-                hx-target="#main-content" 
-                hx-push-url="true"
-                class="text-sm font-medium text-gray-900 uppercase hover:text-gray-600">
-                    АККАУНТ
-                </a>
-                <a href="#" id="mobileCart" class="block text-sm font-medium text-gray-900 hover:text-gray-700 py-2">КОРЗИНА (0)</a>
+                <!-- Группа: кнопка + поле поиска -->
+                <div>
+                    <button id="mobile-search-toggle-btn"
+                            class="block text-sm font-medium text-gray-900 hover:text-gray-700 py-2 w-full text-left">
+                        ПОИСК
+                    </button>
+                    <div id="mobile-search-wrapper-mobile" class="mt-2"></div>
+                </div>
+
+                <!-- Группа: ссылки аккаунта и корзины с увеличенным отступом -->
+                <div class="mt-6 space-y-4">
+                    <a href="{% url 'users:profile' %}" 
+                    hx-get="{% url 'users:profile' %}" 
+                    hx-target="#main-content" 
+                    hx-push-url="true"
+                    class="text-sm font-mediu       m text-gray-900 uppercase hover:text-gray-600">
+                        АККАУНТ
+                    </a>
+                    <a href="#" id="mobileCart" class="block text-sm font-medium text-gray-900 hover:text-gray-700 py-2">КОРЗИНА (0)</a>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Header -->
-    <header class="sticky top-0">
-        <div class="mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
+    <header class="sticky top-0 bg-white border-b border-gray-200 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between md:justify-between h-14 relative">
                 <!-- Mobile Menu Button -->
                 <button id="menuToggle" class="hamburger md:hidden">
                     <span></span>
@@ -182,7 +214,7 @@
                 </button>
                 
                 <!-- Logo -->
-                <div class="flex-shrink-0">
+                <div class="absolute left-1/2 transform -translate-x-1/2 md:static md:transform-none">
                     <a href="{% url 'main:index' %}" 
                        hx-get="{% url 'main:index' %}" 
                        hx-target="#main-content" 
@@ -200,7 +232,7 @@
                        hx-get="{% url 'main:catalog' category.slug %}" 
                        hx-target="#main-content" 
                        hx-push-url="true"
-                       class="nav-link text-sm font-medium text-gray-900 hover:text-gray-700 {% if current_category == category.slug %}active{% endif %}">
+                       class="nav-link text-sm font-medium text-gray-900 hover:text-gray-700 {% if current_category and current_category.slug == category.slug %}active{% endif %}">
                        {{ category.name|upper }}
                     </a>
                     {% endfor %}
@@ -243,7 +275,7 @@
     <div id="main-content">
         {% block content %}
         <!-- Default home content -->
-        <main class="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="text-center py-20">
                 <h2 class="text-4xl font-bold tracking-tight text-gray-900 mb-4">
                     D&V <span class="gold-text">STORE</span>
@@ -267,111 +299,162 @@
         {% endblock %}
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const menuToggle = document.getElementById('menuToggle');
-            const closeMenu = document.getElementById('closeMenu');
-            const mobileMenu = document.getElementById('mobileMenu');
-            const overlay = document.getElementById('overlay');
+<script>
+    // ========== ГЛОБАЛЬНЫЕ ФУНКЦИИ ==========
     
-            function openMobileMenu() {
-                mobileMenu.classList.add('open');
-                overlay.classList.add('active');
-                menuToggle.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-    
-            function closeMobileMenu() {
-                mobileMenu.classList.remove('open');
-                overlay.classList.remove('active');
-                menuToggle.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-    
-            menuToggle.addEventListener('click', openMobileMenu);
-            closeMenu.addEventListener('click', closeMobileMenu);
-            overlay.addEventListener('click', closeMobileMenu);
-    
-            document.addEventListener('htmx:afterRequest', function() {
-                closeMobileMenu();
+    window.updateHeaderCartCount = function(count) {
+        const desktopCart = document.getElementById('desktopCart');
+        const mobileCart = document.getElementById('mobileCart');
+        const mobileCartHeader = document.getElementById('mobileCartHeader');
+        const cartText = `КОРЗИНА (${count})`;
+        
+        if (desktopCart) desktopCart.textContent = cartText;
+        if (mobileCart) mobileCart.textContent = cartText;
+        if (mobileCartHeader) mobileCartHeader.textContent = cartText;
+    };
+
+    window.updateCartCount = function() {
+        fetch('{% url "cart:cart_count" %}')
+            .then(response => response.json())
+            .then(data => {
+                window.updateHeaderCartCount(data.total_items);
             });
+    };
+
+    window.closeCart = function() {
+        const modal = document.querySelector('.cart-modal');
+        const overlay = document.querySelector('.cart-overlay');
+        
+        if (modal) modal.classList.remove('open');
+        if (overlay) overlay.classList.remove('open');
+        
+        setTimeout(() => {
+            const container = document.getElementById('cart-container');
+            if (container) container.innerHTML = '';
+        }, 300);
+    };
+
+    // ========== ПОСЛЕ ЗАГРУЗКИ DOM ==========
     
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const overlay = document.getElementById('overlay');
+
+        function openMobileMenu() {
+            mobileMenu.classList.add('open');
+            overlay.classList.add('active');
+            menuToggle.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileMenu() {
+            mobileMenu.classList.remove('open');
+            overlay.classList.remove('active');
+            menuToggle.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        menuToggle.addEventListener('click', function() {
+            if (mobileMenu.classList.contains('open')) {
+                closeMobileMenu();
+            } else {
+                openMobileMenu();
+            }
+        });
+        
+        closeMenu.addEventListener('click', closeMobileMenu);
+        overlay.addEventListener('click', closeMobileMenu);
+
+        document.addEventListener('htmx:afterRequest', function(event) {
+            // Не закрываем меню, если запрос был из мобильного меню (поиск, ссылки внутри)
+            var trigger = event.detail.elt;
+            if (trigger && trigger.closest('#mobileMenu')) {
+                return;
+            }
+            closeMobileMenu();
+        });
+        function openCart() {
+            // Если корзина уже открыта — не делаем ничего
+            const existingModal = document.querySelector('.cart-modal.open');
+            if (existingModal) return;
+            
+            htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
+                target: '#cart-container',
+                swap: 'innerHTML'
+            });
+        }
+
+        // Привязываем все кнопки корзины
+        function bindCartButtons() {
             const desktopCart = document.getElementById('desktopCart');
             const mobileCart = document.getElementById('mobileCart');
             const mobileCartHeader = document.getElementById('mobileCartHeader');
             
-            updateCartCount();
-            
-            function updateHeaderCartCount(count) {
-                const cartText = `КОРЗИНА (${count})`;
-                if (desktopCart) desktopCart.textContent = cartText;
-                if (mobileCart) mobileCart.textContent = cartText;
-                if (mobileCartHeader) mobileCartHeader.textContent = cartText;
-            }
-            
-            function updateCartCount() {
-                fetch('{% url "cart:cart_count" %}')
-                    .then(response => response.json())
-                    .then(data => {
-                        updateHeaderCartCount(data.total_items);
-                    });
-            }
-    
-            function openCart() {
-                htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
-                    target: '#cart-container',
-                    swap: 'innerHTML'
-                });
-            }
-    
             [desktopCart, mobileCart, mobileCartHeader].forEach(cartLink => {
-                if (cartLink) {
+                if (cartLink && !cartLink.dataset.bound) {
+                    cartLink.dataset.bound = 'true';
                     cartLink.addEventListener('click', function(e) {
                         e.preventDefault();
                         openCart();
                     });
                 }
             });
+        }
 
-            window.addEventListener('resize', function() {
-                if (window.innerWidth >= 768) {
-                    closeMobileMenu();
-                }
-            });
-    
-            document.addEventListener('htmx:afterSettle', function() {
-                updateActiveNavLinks();
-            });
-    
-            function updateActiveNavLinks() {
-                const currentPath = window.location.pathname;
-                const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
-                
-                navLinks.forEach(link => {
-                    link.classList.remove('active');
-                    if (link.getAttribute('href') === currentPath) {
-                        link.classList.add('active');
-                    }
-                });
-            }
-            
-            document.addEventListener('cartUpdated', function(e) {
-                if (e.detail && e.detail.total_items !== undefined) {
-                    updateHeaderCartCount(e.detail.total_items);
-                }
-            });
+        bindCartButtons();
+        window.updateCartCount();
+
+        // Перепривязываем после HTMX-навигации
+        document.addEventListener('htmx:afterSettle', function() {
+            bindCartButtons();
         });
-        
-        window.updateHeaderCartCount = function(count) {
-            const desktopCart = document.getElementById('desktopCart');
-            const mobileCart = document.getElementById('mobileCart');
-            const mobileCartHeader = document.getElementById('mobileCartHeader');
-            const cartText = `КОРЗИНА (${count})`;
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 768) {
+                closeMobileMenu();
+            }
+        });
+
+        document.addEventListener('htmx:afterSettle', function() {
+            updateActiveNavLinks();
+        });
+
+        function updateActiveNavLinks() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
             
-            if (desktopCart) desktopCart.textContent = cartText;
-            if (mobileCart) mobileCart.textContent = cartText;
-            if (mobileCartHeader) mobileCartHeader.textContent = cartText;
-        };
-    </script>
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        }
+    });
+
+    // Переключатель поиска в мобильном меню
+    document.getElementById('mobile-search-toggle-btn').addEventListener('click', function() {
+        var wrapper = document.getElementById('mobile-search-wrapper-mobile');
+        if (wrapper.children.length > 0) {
+            wrapper.innerHTML = '';
+        } else {
+            htmx.ajax('GET', '{% url "main:catalog_all" %}?show_search=true', {
+                target: '#mobile-search-wrapper-mobile',
+                swap: 'innerHTML',
+                source: '#mobile-search-toggle-btn'   // ← обязательно
+            });
+        }
+    });
+
+    // ========== ГЛОБАЛЬНЫЕ СЛУШАТЕЛИ ==========
+
+    document.addEventListener('htmx:afterRequest', function(evt) {
+        if (evt.detail.pathInfo.requestPath.includes('/cart/')) {
+            window.updateCartCount();
+        }
+    });
+</script>
 </body>
 </html>

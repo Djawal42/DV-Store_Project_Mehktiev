@@ -1,18 +1,26 @@
 <div class="space-y-2">
     <p class="text-sm text-gray-700">
-        Адрес по умолчанию
-    </p>
-    <p class="text-sm text-gray-700">
         {{ user.first_name }} {{ user.last_name }}
     </p>
-    <p class="text-sm text-gray-700">
-        {{ user.address1|default:"" }} {{ user.address2|default:"" }}
+    <p class="text-sm text-gray-500">
+        Адрес по умолчанию:
     </p>
     <p class="text-sm text-gray-700">
-        {{ user.city|default:"" }}
-        {% if user.city and user.country %}, {% endif %}
-        {{ user.country|default:"Не указано" }}
+        {{ user.address|default:"" }}
     </p>
+    <p class="text-sm text-gray-700">
+        {% if user.city and user.country %}
+            {{ user.city }}, {{ user.country }}
+        {% elif user.city %}
+            {{ user.city }}
+        {% elif user.country %}
+            {{ user.country }}
+        {% else %}
+            Не указано
+        {% endif %}
+    </p>
+</div>
+
 <div class="mt-4 flex gap-4">
     <button 
         hx-get="{% url 'users:edit_account_details' %}" 
